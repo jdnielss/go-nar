@@ -9,7 +9,7 @@ To install Gonar, you can use the following steps:
 1. Clone this repository:
 
    ```
-   git clone https://github.com/jdnielss/gonar.git
+   git clone https://github.com/jdnielss/go-nar.git
    ```
 
 2. Build the executable:
