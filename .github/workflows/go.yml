@@ -25,7 +25,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ steps.repo_name.outputs.repo_name }}:${{ github.ref_name }} .
+          docker build -t ${{ steps.repo_name.outputs.repo_name }}:latest .
         working-directory: .
 
       - name: Log in to Docker Hub
@@ -33,5 +33,5 @@ jobs:
 
       - name: Push Docker image
         run: |
-          docker tag ${{ steps.repo_name.outputs.repo_name }}:${{ github.ref_name }} ${{ secrets.DOCKER_USERNAME }}/${{ steps.repo_name.outputs.repo_name }}:${{ github.ref_name }}
-          docker push ${{ secrets.DOCKER_USERNAME}}/${{ steps.repo_name.outputs.repo_name }}:${{ github.ref_name }}
+          docker tag ${{ steps.repo_name.outputs.repo_name }}:latest ${{ secrets.DOCKER_USERNAME }}/${{ steps.repo_name.outputs.repo_name }}:latest
+          docker push ${{ secrets.DOCKER_USERNAME}}/${{ steps.repo_name.outputs.repo_name }}:latest
