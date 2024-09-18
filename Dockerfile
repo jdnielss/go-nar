@@ -10,3 +10,4 @@ RUN apk add --no-cache ca-certificates
 COPY --from=builder /go/src/github.com/jdnielss/gonar/gonar /gonar
 RUN chmod +x /gonar
 ENTRYPOINT ["/gonar"]
+CMD ["gonar"]
