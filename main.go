@@ -32,6 +32,40 @@ type GitLabNote struct {
 	Body string `json:"body"`
 }
 
+func toTitleCase(s string) string {
+	var result strings.Builder
+	parts := strings.Split(s, "_")
+
+	for i, part := range parts {
+		if len(part) > 0 {
+			// Capitalize the first letter and make the rest lowercase
+			result.WriteString(strings.ToUpper(string(part[0])) + strings.ToLower(part[1:]))
+			if i < len(parts)-1 {
+				result.WriteString(" ")
+			}
+		}
+	}
+
+	return result.String()
+}
+func createTable(conditions []Condition) string {
+	var sb strings.Builder
+
+	sb.WriteString("| Metric Key     | Actual Value | Comparator | Error Threshold | Status |\n")
+	sb.WriteString("|----------------|--------------|------------|-----------------|--------|\n")
+
+	for _, c := range conditions {
+		status := "✅ OK"
+		if c.Status != "OK" {
+			status = "⛔️ ERROR"
+		}
+		sb.WriteString(fmt.Sprintf("| `%s`   | `%s`      | `%s`       | `%s`            | %s |\n",
+			toTitleCase(c.MetricKey), toTitleCase(c.ActualValue), toTitleCase(c.Comparator), toTitleCase(c.ErrorThreshold), status))
+	}
+
+	return sb.String()
+}
+
 func main() {
 	// Define command-line arguments
 	projectName := flag.String("n", "", "CI Project Name")
@@ -87,21 +121,19 @@ func main() {
 	status := response.ProjectStatus.Status
 	var message strings.Builder
 
+	fmt.Println(response.ProjectStatus.Conditions)
+
 	if status == "OK" {
 		message.WriteString("✅ Quality Gate passed\n")
 	} else {
 		message.WriteString("⛔️ Quality Gate failed\n")
-		for _, condition := range response.ProjectStatus.Conditions {
-			if condition.Status == "OK" {
-				message.WriteString(fmt.Sprintf("✅ %s: %s %s %s => OK\n", condition.MetricKey, condition.ActualValue, condition.Comparator, condition.ErrorThreshold))
-			} else {
-				message.WriteString(fmt.Sprintf("⛔️ %s: %s %s %s => ERROR\n", condition.MetricKey, condition.ActualValue, condition.Comparator, condition.ErrorThreshold))
-			}
-		}
+		table := createTable(response.ProjectStatus.Conditions)
+		message.WriteString(table)
 	}
 
-	fmt.Println(message.String()) // Print the message to console
+	message.WriteString(fmt.Sprintf("\nFor more details, visit [SonarQube](%s/dashboard?id=%s)\n", *sonarURL, *projectName))
 
+	fmt.Println(message.String()) // Print the message to console
 	// Create a note on the GitLab merge request
 	gitlabNoteURL := fmt.Sprintf("%s/api/v4/projects/%s/merge_requests/%s/notes", *gitlabURL, *projectID, *mergeRequestIID)
 	note := GitLabNote{Body: message.String()}
